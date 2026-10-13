@@ -4,7 +4,9 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
+    # 16:40 台灣時間：收盤價、三大法人；22:00：補上晚間公布的融資融券與借券
     - cron: '40 8 * * 1-5'
+    - cron: '0 14 * * 1-5'
 permissions:
   contents: write
   pages: write

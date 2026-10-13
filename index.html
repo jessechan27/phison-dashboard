@@ -1,1 +1,229 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PHISON 8299 | 投資戰情室</title><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script><style>*{box-sizing:border-box}body{margin:0;background:#09111e;color:#e9f0fb;font-family:system-ui,'Noto Sans TC',sans-serif}header,main{max-width:1150px;margin:auto;padding:24px}header{border-bottom:1px solid #34465b;display:flex;justify-content:space-between;align-items:center}.brand{font-size:25px;font-weight:850;letter-spacing:1px}.teal{color:#53e1c1}.muted{color:#91a5bd}.pill{padding:8px 13px;border:1px solid #305c61;border-radius:30px;font-size:12px}h1{font-size:32px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card,section{background:#121f32;border:1px solid #293b50;border-radius:18px;padding:20px}.label{color:#a5b6cb;font-size:13px}.value{font-size:29px;font-weight:750;margin-top:12px}.chart{height:350px}.section{margin-top:19px}button{background:#53e1c1;border:0;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}table{border-collapse:collapse;width:100%;font-size:13px}td,th{padding:10px;border-bottom:1px solid #34465b;text-align:right}td:first-child,th:first-child{text-align:left}footer{color:#8da1b9;font-size:12px;line-height:1.7;padding:20px 0}a{color:#74dbed}@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}.value{font-size:21px}.chart{height:280px}}</style></head><body><header><div class="brand">PHISON <span class="teal">8299</span><div class="muted" style="font-size:11px;font-weight:400">INVESTMENT INTELLIGENCE</div></div><span class="pill" id="status">等待資料</span></header><main><h1>群聯投資戰情室</h1><p class="muted">股價與量能每日盤後更新 · 台灣上櫃股票 · 籌碼監控</p><p><button onclick="load()">重新讀取</button> <span class="muted" id="stamp"></span></p><div class="cards"><div class="card"><div class="label">最新收盤價 / 元</div><div class="value" id="close">—</div><div class="muted" id="change">—</div></div><div class="card"><div class="label">成交量 / 張</div><div class="value" id="volume">—</div><div class="muted" id="day">—</div></div><div class="card"><div class="label">外資買賣超 / 張</div><div class="value">—</div><div class="muted">資料待接入核實來源</div></div><div class="card"><div class="label">借券賣出餘額 / 張</div><div class="value">—</div><div class="muted">資料待接入核實來源</div></div></div><section class="section"><h2>股價與成交量</h2><div class="chart"><canvas id="price"></canvas></div></section><section class="section"><h2>2026 年底目標價｜假設情境</h2><p class="muted">以下區間是先前討論的研究假設，並非每日自動計算的最新預測。</p><div class="cards" style="grid-template-columns:repeat(3,1fr)"><div class="card"><div class="label">悲觀</div><div class="value">1,650–1,900</div></div><div class="card"><div class="label">基準</div><div class="value teal">2,250–2,500</div></div><div class="card"><div class="label">樂觀</div><div class="value">2,600–2,850</div></div></div></section><section class="section"><h2>最近交易日</h2><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>收盤價</th><th>成交量(張)</th></tr></thead><tbody id="records"><tr><td colspan="3">等待更新</td></tr></tbody></table></div></section><footer>來源：櫃買中心 TPEX 盤後公開行情。網頁顯示交易日與抓取時間；更新失敗不會填入虛構資料。法人與借券欄位在未可靠核實前保留空白。非即時報價、不構成投資建議。</footer></main><script>let chart;const f=n=>Number.isFinite(n)?n.toLocaleString('zh-TW',{maximumFractionDigits:2}):'—';async function load(){try{const r=await fetch('data/market.json?'+Date.now());if(!r.ok)throw Error('市場資料檔案尚未建立');const x=await r.json(),d=x.history||[],latest=d.at(-1);document.getElementById('stamp').textContent='更新時間：'+(x.fetched_at||'未更新');if(!latest)throw Error(x.error||'尚未取得資料');document.getElementById('status').textContent='最近交易日 '+latest.date;document.getElementById('close').textContent=f(latest.close);document.getElementById('volume').textContent=f(latest.volume_lots);document.getElementById('day').textContent=latest.date;const previous=d.at(-2);document.getElementById('change').textContent=previous?('較前日 '+f(latest.close-previous.close)+' 元'):'尚無比較資料';document.getElementById('records').innerHTML=d.slice(-15).reverse().map(z=>'<tr><td>'+z.date+'</td><td>'+f(z.close)+'</td><td>'+f(z.volume_lots)+'</td></tr>').join('');if(chart)chart.destroy();chart=new Chart(document.getElementById('price'),{data:{labels:d.map(z=>z.date),datasets:[{type:'line',label:'收盤價',data:d.map(z=>z.close),yAxisID:'y',borderColor:'#53e1c1',backgroundColor:'#53e1c1',pointRadius:1,tension:.2},{type:'bar',label:'成交量(張)',data:d.map(z=>z.volume_lots),yAxisID:'y1',backgroundColor:'#3768a880'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{ticks:{color:'#b7c9dd',maxTicksLimit:10}},y:{position:'left',ticks:{color:'#b7c9dd'}},y1:{position:'right',ticks:{color:'#b7c9dd'},grid:{display:false}}}}})}catch(e){document.getElementById('status').textContent='資料尚未就緒';document.getElementById('stamp').textContent=e.message;document.getElementById('records').innerHTML='<tr><td colspan="3">沒有可靠資料，請檢查 Actions 更新紀錄</td></tr>'}}load();setInterval(load,60*60*1000)</script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PHISON 8299 | 投資戰情室</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09111e;color:#e9f0fb;font-family:system-ui,'Noto Sans TC',sans-serif}
+header,main{max-width:1150px;margin:auto;padding:24px}
+header{border-bottom:1px solid #34465b;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:25px;font-weight:850;letter-spacing:1px}
+.teal{color:#53e1c1}.muted{color:#91a5bd}
+.up{color:#ff6b6b}.down{color:#3ddc84}
+.pill{padding:8px 13px;border:1px solid #305c61;border-radius:30px;font-size:12px}
+h1{font-size:32px}
+h2{font-size:20px;margin:0 0 6px}
+h3{font-size:15px;margin:0 0 8px;color:#c9d6e6}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.cards+.cards{margin-top:14px}
+.card,section{background:#121f32;border:1px solid #293b50;border-radius:18px;padding:20px}
+.label{color:#a5b6cb;font-size:13px}
+.value{font-size:29px;font-weight:750;margin-top:12px}
+.sub{color:#91a5bd;font-size:13px;margin-top:6px;line-height:1.6}
+.chart{height:300px}
+.chart.low{height:150px;margin-top:10px}
+.section{margin-top:19px}
+.note{color:#91a5bd;font-size:13px;margin:0 0 14px;line-height:1.6}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.split>div,.card{min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{background:#53e1c1;border:0;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}
+#range button{background:transparent;color:#c9d6e6;border:1px solid #305c61;padding:7px 12px;font-weight:600}
+#range button.on{background:#53e1c1;color:#09111e;border-color:#53e1c1}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+td,th{padding:9px 10px;border-bottom:1px solid #34465b;text-align:right;white-space:nowrap}
+th{color:#a5b6cb;font-weight:600}
+td:first-child,th:first-child{text-align:left}
+tr.big td{background:#16283f}
+.scroll{overflow-x:auto}
+footer{color:#8da1b9;font-size:12px;line-height:1.7;padding:20px 0}
+a{color:#74dbed}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}.value{font-size:21px}.chart{height:240px}.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand">PHISON <span class="teal">8299</span><div class="muted" style="font-size:11px;font-weight:400">INVESTMENT INTELLIGENCE</div></div><span class="pill" id="status">等待資料</span></header>
+<main>
+<h1>群聯投資戰情室</h1>
+<p class="muted">股價、三大法人、融資融券、借券每日盤後更新 · 集保大戶每週更新 · 台灣上櫃股票</p>
+<div class="toolbar"><button onclick="load()">重新讀取</button><span class="muted" id="stamp"></span></div>
+
+<div class="cards section">
+  <div class="card"><div class="label">最新收盤價 / 元</div><div class="value" id="close">—</div><div class="sub" id="change">—</div></div>
+  <div class="card"><div class="label">成交量 / 張</div><div class="value" id="volume">—</div><div class="sub" id="day">—</div></div>
+  <div class="card"><div class="label">三大法人買賣超 / 張</div><div class="value" id="inst">—</div><div class="sub" id="instSub">資料待更新</div></div>
+  <div class="card"><div class="label">借券賣出餘額 / 張</div><div class="value" id="sbl">—</div><div class="sub" id="sblSub">資料待更新</div></div>
+</div>
+<div class="cards">
+  <div class="card"><div class="label">融資餘額 / 張</div><div class="value" id="margin">—</div><div class="sub" id="marginSub">資料待更新</div></div>
+  <div class="card"><div class="label">融券餘額 / 張</div><div class="value" id="short">—</div><div class="sub" id="shortSub">資料待更新</div></div>
+  <div class="card"><div class="label">千張大戶持股比例</div><div class="value" id="big1000">—</div><div class="sub" id="big1000Sub">資料待更新</div></div>
+  <div class="card"><div class="label">400 張以上大戶持股比例</div><div class="value" id="big400">—</div><div class="sub" id="big400Sub">資料待更新</div></div>
+</div>
+
+<div class="toolbar section" id="range"><span class="muted">圖表區間</span><button data-n="22">近 1 月</button><button data-n="66" class="on">近 3 月</button><button data-n="130">近 6 月</button><button data-n="0">全部</button></div>
+
+<section class="section"><h2>股價與成交量</h2><p class="note">上圖為收盤價（元），下圖為成交量（張）。</p><div class="chart"><canvas id="priceChart"></canvas></div><div class="chart low"><canvas id="volumeChart"></canvas></div></section>
+
+<section class="section"><h2>三大法人買賣超</h2><p class="note">單位：張。柱狀為外資、投信、自營商，正值為買超、負值為賣超；白線為三大法人合計。外資含外資自營商，自營商含自行買賣與避險。</p><div class="chart"><canvas id="instChart"></canvas></div></section>
+
+<section class="section"><h2>融資融券餘額</h2><p class="note">單位：張。融資餘額反映散戶借錢買進的部位，融券餘額反映信用放空部位。</p><div class="split"><div><h3>融資餘額</h3><div class="chart"><canvas id="marginChart"></canvas></div></div><div><h3>融券餘額</h3><div class="chart"><canvas id="shortChart"></canvas></div></div></div></section>
+
+<section class="section"><h2>借券賣出餘額</h2><p class="note">單位：張。借券賣出多為法人放空或避險部位，餘額上升代表借券放空增加。</p><div class="chart"><canvas id="sblChart"></canvas></div></section>
+
+<section class="section"><h2>集保大戶持股比例（每週）</h2><p class="note">來源：集保結算所集保戶股權分散表，每週更新一次。大戶分為持股 400 張以上及 1,000 張以上兩級，比例為占集保庫存數百分比。</p><div class="chart"><canvas id="holderChart"></canvas></div>
+<div class="split section"><div><h3 id="levelTitle">最新持股分級</h3><div class="scroll"><table><thead><tr><th>持股分級（股）</th><th>人數</th><th>張數</th><th>比例</th></tr></thead><tbody id="levels"><tr><td colspan="4">等待更新</td></tr></tbody></table></div></div>
+<div><h3>近期每週變化</h3><div class="scroll"><table><thead><tr><th>資料週</th><th>股東人數</th><th>400 張以上</th><th>千張以上</th><th>千張人數</th></tr></thead><tbody id="weeks"><tr><td colspan="5">等待更新</td></tr></tbody></table></div></div></div></section>
+
+<section class="section"><h2>2026 年底目標價｜假設情境</h2><p class="muted">以下區間是先前討論的研究假設，並非每日自動計算的最新預測。</p><div class="cards" style="grid-template-columns:repeat(3,1fr)"><div class="card"><div class="label">悲觀</div><div class="value">1,650–1,900</div></div><div class="card"><div class="label">基準</div><div class="value teal">2,250–2,500</div></div><div class="card"><div class="label">樂觀</div><div class="value">2,600–2,850</div></div></div></section>
+
+<section class="section"><h2>最近交易日</h2><p class="note">成交量、法人買賣超、融資融券與借券單位皆為張。</p><div class="scroll"><table><thead><tr><th>日期</th><th>收盤價</th><th>成交量</th><th>外資</th><th>投信</th><th>自營商</th><th>三大法人</th><th>融資餘額</th><th>融券餘額</th><th>借券賣出餘額</th></tr></thead><tbody id="records"><tr><td colspan="10">等待更新</td></tr></tbody></table></div></section>
+
+<footer>來源：櫃買中心 TPEX 盤後公開資訊（個股行情、三大法人買賣明細、融資融券餘額、信用額度總量管制餘額表）、集保結算所集保戶股權分散表。融資融券與借券資料於晚間公布，當日尚未公布時顯示前一交易日並標示資料日。每筆資料寫入前都會核對欄位、日期與小計，更新失敗不會填入虛構資料。非即時報價、不構成投資建議。</footer>
+</main>
+<script>
+const SERIES = {foreign: '#3987e5', trust: '#d95926', dealer: '#199e70', total: '#e9f0fb'};
+Chart.defaults.color = '#b7c9dd';
+Chart.defaults.font.family = "system-ui,'Noto Sans TC',sans-serif";
+const charts = {};
+let data = null, span = 66;
+const $ = id => document.getElementById(id);
+const f = (n, digits = 0) => Number.isFinite(n) ? n.toLocaleString('zh-TW', {maximumFractionDigits: digits}) : '—';
+const pct = n => Number.isFinite(n) ? n.toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '%' : '—';
+const signed = (n, digits = 0) => Number.isFinite(n) ? (n > 0 ? '+' : '') + f(n, digits) : '—';
+const tone = (n, text) => '<span class="' + (n > 0 ? 'up' : n < 0 ? 'down' : '') + '">' + text + '</span>';
+const net = (n, digits = 0) => tone(n, signed(n, digits));
+const latestWith = (rows, key) => rows.findLast(r => Number.isFinite(r[key]));
+const col = (rows, key) => rows.map(r => r[key] ?? null);
+
+function draw(id, labels, datasets, opts = {}) {
+  charts[id]?.destroy();
+  const digits = opts.digits ?? 0, unit = opts.unit ?? '';
+  // Bar charts keep a zero baseline; line-only charts scale to the data so trends stay readable.
+  charts[id] = new Chart($(id), {
+    type: datasets.some(x => x.type !== 'line') ? 'bar' : 'line',
+    data: {labels, datasets},
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {display: datasets.length > 1, labels: {usePointStyle: true, boxWidth: 8, boxHeight: 8,
+          sort: (a, b) => a.datasetIndex - b.datasetIndex}},
+        tooltip: {callbacks: {label: c => ' ' + c.dataset.label + '：' + f(c.parsed.y, digits) + unit}}
+      },
+      scales: {
+        x: {stacked: !!opts.stacked, grid: {display: false}, ticks: {maxTicksLimit: 8, maxRotation: 0, autoSkipPadding: 20,
+            callback(v) { return this.getLabelForValue(v).slice(5); }}},
+        y: {stacked: !!opts.stacked, grid: {color: '#22344a'}, border: {display: false},
+            ticks: {callback: v => f(v, digits) + unit}}
+      }
+    }
+  });
+}
+const line = (label, values, color) => ({type: 'line', label, data: values, borderColor: color, backgroundColor: color,
+  borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: .2, order: 0});
+const bars = (label, values, color) => ({label, data: values, backgroundColor: color, borderRadius: 2, order: 1});
+
+function render() {
+  const all = data.history || [];
+  const d = span ? all.slice(-span) : all;
+  const from = d[0]?.date || '';
+  const w = (data.holders || []).filter(x => !span || x.date >= from);
+  const days = d.map(z => z.date);
+  draw('priceChart', days, [line('收盤價', col(d, 'close'), '#53e1c1')], {digits: 2});
+  draw('volumeChart', days, [bars('成交量', col(d, 'volume_lots'), '#3768a8')]);
+  draw('instChart', days, [
+    bars('外資', col(d, 'foreign_net'), SERIES.foreign),
+    bars('投信', col(d, 'trust_net'), SERIES.trust),
+    bars('自營商', col(d, 'dealer_net'), SERIES.dealer),
+    {...line('三大法人合計', col(d, 'inst_net'), SERIES.total), stack: 'total'}
+  ], {stacked: true});
+  draw('marginChart', days, [line('融資餘額', col(d, 'margin_balance'), SERIES.foreign)]);
+  draw('shortChart', days, [line('融券餘額', col(d, 'short_balance'), SERIES.trust)]);
+  draw('sblChart', days, [line('借券賣出餘額', col(d, 'sbl_balance'), '#9085e9')]);
+  draw('holderChart', w.map(z => z.date), [
+    line('400 張以上', col(w, 'over400_pct'), SERIES.foreign),
+    line('千張以上', col(w, 'over1000_pct'), SERIES.trust)
+  ], {digits: 2, unit: '%'});
+}
+
+function fillCards(d, w) {
+  const q = d.at(-1), p = d.at(-2);
+  $('status').textContent = '最近交易日 ' + q.date;
+  $('close').textContent = f(q.close, 2);
+  $('change').innerHTML = p ? '較前日 ' + net(q.close - p.close, 2) + ' 元（' + net((q.close / p.close - 1) * 100, 2) + '%）' : '尚無比較資料';
+  $('volume').textContent = f(q.volume_lots);
+  $('day').textContent = q.date;
+  const i = latestWith(d, 'inst_net');
+  if (i) {
+    $('inst').innerHTML = net(i.inst_net);
+    $('instSub').innerHTML = '外資 ' + net(i.foreign_net) + ' · 投信 ' + net(i.trust_net) + ' · 自營 ' + net(i.dealer_net) + '<br>資料日 ' + i.date;
+  }
+  const s = latestWith(d, 'sbl_balance');
+  if (s) {
+    $('sbl').textContent = f(s.sbl_balance);
+    $('sblSub').innerHTML = '較前日 ' + signed(s.sbl_change) + ' 張<br>資料日 ' + s.date;
+  }
+  const m = latestWith(d, 'margin_balance');
+  if (m) {
+    $('margin').textContent = f(m.margin_balance);
+    $('marginSub').innerHTML = '較前日 ' + signed(m.margin_change) + ' 張 · 使用率 ' + pct(m.margin_usage) + '<br>資料日 ' + m.date;
+    $('short').textContent = f(m.short_balance);
+    $('shortSub').innerHTML = '較前日 ' + signed(m.short_change) + ' 張 · 券資比 ' + pct(m.short_balance / m.margin_balance * 100) + '<br>資料日 ' + m.date;
+  }
+  const h = w.at(-1), hp = w.at(-2);
+  if (h) {
+    const delta = key => hp ? '較上週 ' + signed(h[key] - hp[key], 2) + ' 個百分點' : '尚無比較資料';
+    $('big1000').textContent = pct(h.over1000_pct);
+    $('big1000Sub').innerHTML = f(h.over1000_holders) + ' 人 · ' + delta('over1000_pct') + '<br>資料週 ' + h.date;
+    $('big400').textContent = pct(h.over400_pct);
+    $('big400Sub').innerHTML = f(h.over400_holders) + ' 人 · ' + delta('over400_pct') + '<br>資料週 ' + h.date;
+  }
+}
+
+function fillTables(d, w) {
+  $('records').innerHTML = d.slice(-20).reverse().map(z => '<tr><td>' + z.date + '</td><td>' + f(z.close, 2) + '</td><td>' + f(z.volume_lots) +
+    '</td><td>' + net(z.foreign_net) + '</td><td>' + net(z.trust_net) + '</td><td>' + net(z.dealer_net) + '</td><td>' + net(z.inst_net) +
+    '</td><td>' + f(z.margin_balance) + '</td><td>' + f(z.short_balance) + '</td><td>' + f(z.sbl_balance) + '</td></tr>').join('');
+  const h = w.at(-1);
+  if (!h) return;
+  $('levelTitle').textContent = '最新持股分級（' + h.date + '）';
+  $('levels').innerHTML = h.levels.map((r, k) => '<tr' + (k >= 11 ? ' class="big"' : '') + '><td>' + r[0] + '</td><td>' + f(r[1]) +
+    '</td><td>' + f(r[2]) + '</td><td>' + pct(r[3]) + '</td></tr>').join('') +
+    '<tr><td>合計</td><td>' + f(h.holders) + '</td><td></td><td>' + pct(100) + '</td></tr>';
+  $('weeks').innerHTML = w.slice(-8).reverse().map(z => '<tr><td>' + z.date + '</td><td>' + f(z.holders) + '</td><td>' + pct(z.over400_pct) +
+    '</td><td>' + pct(z.over1000_pct) + '</td><td>' + f(z.over1000_holders) + '</td></tr>').join('');
+}
+
+async function load() {
+  try {
+    const r = await fetch('data/market.json?' + Date.now());
+    if (!r.ok) throw Error('市場資料檔案尚未建立');
+    data = await r.json();
+    const d = data.history || [], w = data.holders || [];
+    const warnings = data.warnings || [];
+    $('stamp').textContent = '更新時間：' + (data.fetched_at || '未更新') + (warnings.length ? ' · ' + warnings.length + ' 筆來源警告' : '');
+    $('stamp').title = warnings.join('\n');
+    if (!d.length) throw Error(data.error || '尚未取得資料');
+    fillCards(d, w);
+    fillTables(d, w);
+    render();
+  } catch (e) {
+    $('status').textContent = '資料尚未就緒';
+    $('stamp').textContent = e.message;
+    $('records').innerHTML = '<tr><td colspan="10">沒有可靠資料，請檢查 Actions 更新紀錄</td></tr>';
+  }
+}
+document.querySelectorAll('#range button').forEach(b => b.onclick = () => {
+  span = +b.dataset.n;
+  document.querySelectorAll('#range button').forEach(x => x.classList.toggle('on', x === b));
+  if (data) render();
+});
+load();
+setInterval(load, 60 * 60 * 1000);
+</script>
+</body>
+</html>
