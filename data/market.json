@@ -1,7 +1,7 @@
 {
   "symbol": "8299",
   "source": "TPEX dailyQuotes / 三大法人 / 融資融券 / 借券賣出; TDCC 集保戶股權分散表",
-  "fetched_at": "2026-11-07T04:16:54+08:00",
+  "fetched_at": "2026-11-10T03:05:40+08:00",
   "history": [
     {
       "date": "2026-06-10",
@@ -1618,6 +1618,22 @@
       "short_change": -2.0,
       "sbl_balance": 18914.0,
       "sbl_change": 172.0
+    },
+    {
+      "date": "2026-11-09",
+      "close": 1650.0,
+      "volume_lots": 1167.4,
+      "foreign_net": -255.97,
+      "trust_net": 0.0,
+      "dealer_net": 47.63,
+      "inst_net": -208.35,
+      "margin_balance": 9319.0,
+      "margin_change": 146.0,
+      "margin_usage": 16.83,
+      "short_balance": 32.0,
+      "short_change": 24.0,
+      "sbl_balance": 19008.0,
+      "sbl_change": 94.0
     }
   ],
   "holders": [
